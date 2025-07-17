@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Virtual room experiment!</title>
+        <!-- jspsych plugins -->
+        <script src="jspsych/jspsych.js"></script>
+        <script src="jspsych/plugin-html-keyboard-response.js"></script>
+        <script src="jspsych/plugin-html-button-response.js"></script>
+        <script src="jspsych/plugin-image-keyboard-response.js"></script>
+        <script src="jspsych/plugin-instructions.js"></script>
+        <script src="jspsych/plugin-survey-multi-choice.js"></script>
+        <script src="jspsych/plugin-fullscreen.js"></script>
+        <script src="jspsych/plugin-preload.js"></script>
+        <!-- jspsych plugins for surveys -->
+        <script src="jsQ/plugin-survey-demo.js"></script>
+        <script src="jsQ/plugin-survey-feedback.js"></script>
+        <script src="jsQ/plugin-survey-template.js"></script>
+        <!-- my self-written code -->
+        <script src="js/rooms.js"></script>
+        <script src="js/consent.js"></script>
+        <script src="js/script.js"></script>
+        <script src="js/jspsychtrials.js"></script>
+        <script src="js/plugin-comprehension.js"></script>
+        <!-- surveys -->
+        <script src="jsQ/ius12.js"></script>
+        <script src="jsQ/loc74.js"></script>
+        <!-- css -->
+        <link href="jspsych/jspsych.css" rel="stylesheet" type="text/css" />
+        <link href="css/style.css" rel="stylesheet">
+    </head>
+    <body></body>
+    <script>
+        //------------------------------------//
+        // Condition: Gold-before-Bomb (GB = true) OR Bomb-before-Gold (GB = false)
+        //------------------------------------//
+        const GB = true;
+        if(GB){
+            var comp_path = "img/ComprehensionGB/";
+            var inst_path = "img/InstructionsGB/";
+            var instr_ind_1end = 17;
+            var instr_ind_2end = 25;
+            var instr_ind_3end = 48;
+            var instr_ind_4end = 57;
+            var instr_ind_5end = 80;
+        }else{
+            var comp_path = "img/ComprehensionBG/";
+            var inst_path = "img/InstructionsBG/";
+            var instr_ind_1end = 17;
+            var instr_ind_2end = 27;
+            var instr_ind_3end = 50;
+            var instr_ind_4end = 58;
+            var instr_ind_5end = 81;
+        }
+        //------------------------------------//
+        // Debugging mode?
+        //------------------------------------//
+        debuggingmode = true
+        if (debuggingmode){
+            // variables controlling number of trials when debugging
+            var n_limited_trials = 9;   // number of trials for selecting rooms
+        }else{
+            // during the test phase, both variable must be put to -1:
+            var n_limited_trials = -1;   // all pairs of rooms will be presented
+        }
+
+        //------------------------------------//
+        // Main parameters
+        //------------------------------------//
+        // trial counter
+        var selection_trial = 0;
+
+        // bonus
+        var collected_gold = 0;
+        var collected_bomb = 0;
+        
+        var last_collected_gold = 0;
+        var delta_collected_gold = 0;
+        var last_collected_bomb = 0;
+        var delta_collected_bomb = 0;
+
+        const feedback_period = 7;
+        const break_period = 3;
+
+        const initial_gold = 50;
+
+        //------------------------------------//
+        // Making the timline
+        //------------------------------------//
+        const redirect_link = "https://google.com";
+        var jsPsych = initJsPsych({
+            show_progress_bar: true,
+            on_finish: function() {
+                minimum_valid_rt: 100;
+
+                // redirecting to Prolific
+                setTimeout(function () {
+                    window.location.replace(redirect_link);
+                }, 1000);
+            }
+        });
+        jsPsych.data.addProperties({
+            ConditionGB: GB
+        });
+        var timeline = [];
+        
+        
+        //------------------------------------//
+        // subject ID generator
+        //------------------------------------//
+        // readout prolific subject ID
+        var pid = null;
+        let id = null;
+
+        //------------------------------------//
+        // Preloading all images
+        //------------------------------------//
+        var preload = {
+            type: jsPsychPreload,
+            images: function(){
+                var pages = ["img/BaseAction.png", "img/BaseBomb.png", "img/Agent.png", "img/Target.png", "img/Goal.png", "img/Cross.png", "img/Check.png", "img/Bomb.png", "img/Safe.png"]
+                for(i = 1; i <= instr_ind_5end; i++){
+                    pages.push(inst_path + "Slide" + i + ".png")
+                }
+                for(i = 1; i <= 8; i++){
+                    pages.push(comp_path + "Slide" + i + ".png")
+                }
+                return pages
+            }
+        };
+        timeline.push(preload);
+
+        //------------------------------------//
+        // Full screen and welcome
+        //------------------------------------//
+        var fullscreen = {
+            type: jsPsychFullscreen,
+            fullscreen_mode: true
+        }
+        timeline.push(fullscreen);
+        
+        //------------------------------------//
+        // Consent
+        //------------------------------------//
+        var consent = {
+            type: jsPsychHtmlButtonResponse,
+            stimulus: `<div class="consent-container">` + create_consent_form(`25 to 35 minutes`, `3 £`, `5 £`) + `</div>`,
+            choices: ['I consent to participate in studies or experiments on cognitive control.'],
+            prompt: `<p><strong>If you do not want to consent to participate in this study, you cannot participate in the experiment and should close the window now.</p></strong>`
+        };
+        timeline.push(consent);
+
+
+        var dataconsent = {
+            type: jsPsychFullscreen,
+            fullscreen_mode: true,
+            message: `<div class="consent-container">` + create_data_consent_form() + `</div>`,
+            button_label: ['I consent to the use of my data described in the Data Protection Information Sheet and confirm having received a copy of the Data Protection Sheet.']
+        };
+        timeline.push(dataconsent);
+
+        //------------------------------------//
+        // Instruction: Part 1
+        //------------------------------------//
+        var instr1 = {
+            type: jsPsychInstructions,
+            pages: function(){
+                var pages = []
+                for(i = 1; i <= instr_ind_1end; i++){
+                    pages.push(
+                        "<img src='./" + inst_path +  "Slide" + i +
+                        ".png' style='max-width: 75%'></img>"
+                    )
+                }
+                return pages
+            },
+            show_clickable_nav: true,
+            button_label_previous: "Prev",
+            button_label_next: "Next",
+            data: {
+                task: 'instruction'
+            }
+        };
+        timeline.push(instr1);
+
+        //------------------------------------//
+        // Moving Practice
+        //------------------------------------//
+        room_index = 1
+        var movegrid = make_movegrid_trial(room_index)
+        var movegridresult = make_movegridresult_trial(room_index)
+        var test_procedure_grid = {
+            timeline: [fixation, movegrid, movegridresult],
+            repetitions: 3
+        };
+        timeline.push(test_procedure_grid);
+    
+        var instr1_newroom = {
+            type: jsPsychHtmlButtonResponse,
+            stimulus: `<h2>Awesome!</h2>` + `<h3>Let's try out a random room.</h3>`,
+            choices: ['Continue']
+        };
+        timeline.push(instr1_newroom);
+
+        room_index = 2
+        var movegridresult = make_movegridresult_trial(room_index)
+        // fixing the stochastic outcome based on the choice of i
+        var prac_index = [3,2,1]
+        for (i = 0; i < prac_index.length; i++) {
+            var movegrid = make_movegrid_practice_trial(room_index, prac_index[i])
+            var test_procedure_grid = {
+                timeline: [fixation, movegrid, movegridresult],
+                repetitions: 1
+            };
+            timeline.push(test_procedure_grid);
+        }
+        
+        var instr1_end = {
+            type: jsPsychHtmlButtonResponse,
+            stimulus: `<h2>Great!</h2>` +
+                `<h4>That was a lot of practice.</h4>
+                <h4>Let's move on.</h4>`,
+            choices: ['Continue']
+        };
+        timeline.push(instr1_end);
+
+        //------------------------------------//
+        // Instruction: Part 2
+        //------------------------------------//
+        var instr2 = {
+            type: jsPsychInstructions,
+            pages: function(){
+                var pages = []
+                for(i = (instr_ind_1end+1); i <= instr_ind_2end; i++){
+                    pages.push(
+                        "<img src='./" + inst_path +  "Slide" + i +
+                        ".png' style='max-width: 75%'></img>"
+                    )
+                }
+                return pages
+            },
+            show_clickable_nav: true,
+            button_label_previous: "Prev",
+            button_label_next: "Next",
+            data: {
+                task: 'instruction'
+            }
+        };
+        timeline.push(instr2);
+
+        //------------------------------------//
+        // Gold-collecting practice
+        //------------------------------------//
+        room_index = 1
+        // fixing the stochastic outcome based on the choice of i
+        var prac_index = [[1,0],[3,0],[5,0],[4,0],[0,0]]
+        for (i = 0; i < prac_index.length; i++) {
+            if (GB){
+                var seegrid = make_seegridgoal_trial(room_index)
+                var movegridgoalresult = make_movegridgoalresult_trial(room_index)
+                var movegridgoal = make_movegridgoal_practice_trial(room_index,prac_index[i][0],prac_index[i][1])
+                var test_procedure_grid = {
+                    timeline: [fixation, seegrid, movegridgoal, movegridgoalresult],
+                    repetitions: 1
+                };
+                timeline.push(test_procedure_grid);
+            } else {
+                var seegrid = make_seegridgoalbomb_trial(room_index)
+                var movegridgoalresult = make_movegridgoalresultbomb_trial(room_index)
+                var movegridgoal = make_movegridgoalbomb_practice_trial(room_index,prac_index[i][0],prac_index[i][1])
+                var test_procedure_grid = {
+                    timeline: [fixation, seegrid, movegridgoal, movegridgoalresult],
+                    repetitions: 1
+                };
+                timeline.push(test_procedure_grid);
+            }
+        }
+        
+        var instr1_newroom = {
+            type: jsPsychHtmlButtonResponse,
+            stimulus: `<h2>Awesome!</h2>` + `<h3>Let's try out a random room.</h3>`,
+            choices: ['Continue']
+        };
+        timeline.push(instr1_newroom);
+
+        room_index = 2
+        var prac_index = [[1,2],[7,2],[5,1],[4,1],[0,3]]
+        for (i = 0; i < prac_index.length; i++) {
+            if (GB){
+                var seegrid = make_seegridgoal_trial(room_index)
+                var movegridgoalresult = make_movegridgoalresult_trial(room_index)
+                var movegridgoal = make_movegridgoal_practice_trial(room_index,prac_index[i][0],prac_index[i][1])
+                var test_procedure_grid = {
+                    timeline: [fixation, seegrid, movegridgoal, movegridgoalresult],
+                    repetitions: 1
+                };
+                timeline.push(test_procedure_grid);
+            } else {
+                var seegrid = make_seegridgoalbomb_trial(room_index)
+                var movegridgoalresult = make_movegridgoalresultbomb_trial(room_index)
+                var movegridgoal = make_movegridgoalbomb_practice_trial(room_index,prac_index[i][0],prac_index[i][1])
+                var test_procedure_grid = {
+                    timeline: [fixation, seegrid, movegridgoal, movegridgoalresult],
+                    repetitions: 1
+                };
+                timeline.push(test_procedure_grid);
+            }
+        }
+        
+        var instr2_end = {
+            type: jsPsychHtmlButtonResponse,
+            stimulus: `<h2>Great!</h2>` +
+                    `<h4>That was a lot of practice for now.</h4>
+                     <h4>Let's move on.</h4>`,
+            choices: ['Continue']
+        };
+        timeline.push(instr2_end);
+
+
+        //------------------------------------//
+        // Instruction: Part 3
+        //------------------------------------//
+        var instr3 = {
+            type: jsPsychInstructions,
+            pages: function(){
+                var pages = []
+                for(i = (instr_ind_2end+1); i <= instr_ind_3end; i++){
+                    pages.push(
+                        "<img src='./" + inst_path +  "Slide" + i +
+                        ".png' style='max-width: 75%'></img>"
+                    )
+                }
+                return pages
+            },
+            show_clickable_nav: true,
+            button_label_previous: "Prev",
+            button_label_next: "Next",
+            data: {
+                task: 'instruction'
+            }
+        };
+        timeline.push(instr3);
+
+        //------------------------------------//
+        // Room selecting practice
+        //------------------------------------//
+        var room_pair_index_practice = [[0,9], [3,10], [4,7]]
+        for (let i = 0; i < room_pair_index_practice.length; i++) { 
+            var room_index_1 = room_pair_index_practice[i][0];
+            var room_index_2 = room_pair_index_practice[i][1];
+            if (room_index_1 != room_index_2){
+                if(GB){
+                    var roomsel = make_roomselection_trial(room_index_1, room_index_2, false);
+                    var roomselresult = make_showselectedroom_trial()
+                    var roomselpracfeedback = make_roomselpracfeedback_trial(room_index_1, room_index_2)
+                    var test_procedure_selection = {
+                        timeline: [fixation, roomsel, roomselresult, roomselpracfeedback]
+                    };
+                    timeline.push(test_procedure_selection);
+                } else {
+                    var roomsel = make_roomselectionbomb_trial(room_index_1, room_index_2, false);
+                    var roomselresult = make_showselectedroombomb_trial()
+                    var roomselpracfeedback = make_roomselpracfeedbackbomb_trial(room_index_1, room_index_2)
+                    var test_procedure_selection = {
+                        timeline: [fixation, roomsel, roomselresult, roomselpracfeedback]
+                    };
+                    timeline.push(test_procedure_selection);
+                }
+            }
+        }
+        var instr3_end = {
+            type: jsPsychHtmlButtonResponse,
+            stimulus: `<h2>You are all set!</h2>` +
+                    `<h4>But, before we start, let's check if everything is clear.</h4>`,
+            choices: ['Continue']
+        };
+        timeline.push(instr3_end);
+
+        //------------------------------------//
+        // Comprehension test 1
+        //------------------------------------//
+        if(GB){
+            var comprehension = {
+                type: jsPsychGold1stepComprehension,
+                data: {
+                    task: 'comprehension'
+                }
+            }
+            var comprehension2 = {
+                type: jsPsychGold1stepComprehension2,
+                data: {
+                    task: 'comprehension'
+                }
+            }
+        }else{
+            var comprehension = {
+                type: jsPsychGold1stepComprehensionBG,
+                data: {
+                    task: 'comprehension'
+                }
+            }
+            var comprehension2 = {
+                type: jsPsychGold1stepComprehension3,
+                data: {
+                    task: 'comprehension'
+                }
+            }
+        }
+        timeline.push(comprehension);
+        timeline.push(comprehension2);
+
+        
+        var ready_trial = {
+            type: jsPsychHtmlButtonResponse,
+            stimulus: `<h2>Awesome!</h2>` + 
+                      `<h1>Ready to start the experiment?</h1>` + 
+                      `<h2 style="color: red;">Remember: We will show you your bonus ONCE EVERY FEW TRIALS.</h2>` ,
+            choices: ['Continue']
+        };
+        timeline.push(ready_trial);
+
+        //------------------------------------//
+        // The main experiment (block 1)
+        //------------------------------------//
+        const valid_rooms = [0,1,2,4,5,6,7,8,9];
+        // const n_rooms = allrooms.length
+        const n_rooms = valid_rooms.length
+        var room_pair_index = [];
+        for (let i = 0; i < n_rooms; i++) { 
+            for (let j = 0; j < n_rooms; j++) { 
+                if(i != j){
+                    room_pair_index.push([valid_rooms[i], valid_rooms[j]]);
+                }
+            }
+        }
+        room_pair_index = jsPsych.randomization.sampleWithoutReplacement(room_pair_index, room_pair_index.length);
+        if(n_limited_trials < 1){
+            n_limited_trials = room_pair_index.length
+        }
+        for (let i = 0; i < n_limited_trials; i++) { 
+            var room_index_1 = room_pair_index[i][0];
+            var room_index_2 = room_pair_index[i][1];
+            if(GB){
+                var roomsel = make_roomselection_trial(room_index_1, room_index_2);
+                var roomselresult = make_showselectedroom_trial()
+                var test_procedure_selection = {
+                    timeline: [fixation, roomsel, roomselresult]
+                };
+                timeline.push(test_procedure_selection);
+            }else{
+                var roomsel = make_roomselectionbomb_trial(room_index_1, room_index_2);
+                var roomselresult = make_showselectedroombomb_trial()
+                var test_procedure_selection = {
+                    timeline: [fixation, roomsel, roomselresult]
+                };
+                timeline.push(test_procedure_selection);
+            }
+        
+            if(((i+1) % feedback_period) == 0){
+                if(GB){
+                    timeline.push(gold_feedback_trial);
+                }else{
+                    timeline.push(goldbomb_feedback_trial);
+                }
+            }
+            if(((i+1) % (break_period*feedback_period)) == 0){
+                timeline.push(break_trial);
+            }
+        }
+        //------------------------------------//
+        // Instruction: Part 4
+        //------------------------------------//
+        var instr4 = {
+            type: jsPsychInstructions,
+            pages: function(){
+                var pages = []
+                for(i = (instr_ind_3end+1); i <= instr_ind_4end; i++){
+                    pages.push(
+                        "<img src='./" + inst_path +  "Slide" + i +
+                        ".png' style='max-width: 75%'></img>"
+                    )
+                }
+                return pages
+            },
+            show_clickable_nav: true,
+            button_label_previous: "Prev",
+            button_label_next: "Next",
+            data: {
+                task: 'instruction'
+            }
+        }
+        timeline.push(instr4)
+
+        //------------------------------------//
+        // Gold-collecting practice
+        //------------------------------------//
+        room_index = 1
+        // fixing the stochastic outcome based on the choice of i
+        var prac_index = [[1,0],[3,0],[5,0],[4,0],[0,0]]
+        for (i = 0; i < prac_index.length; i++) {
+            if (!GB){
+                var seegrid = make_seegridgoal_trial(room_index)
+                var movegridgoalresult = make_movegridgoalresult_trial(room_index)
+                var movegridgoal = make_movegridgoal_practice_trial(room_index,prac_index[i][0],prac_index[i][1])
+                var test_procedure_grid = {
+                    timeline: [fixation, seegrid, movegridgoal, movegridgoalresult],
+                    repetitions: 1
+                };
+                timeline.push(test_procedure_grid);
+            } else {
+                var seegrid = make_seegridgoalbomb_trial(room_index)
+                var movegridgoalresult = make_movegridgoalresultbomb_trial(room_index)
+                var movegridgoal = make_movegridgoalbomb_practice_trial(room_index,prac_index[i][0],prac_index[i][1])
+                var test_procedure_grid = {
+                    timeline: [fixation, seegrid, movegridgoal, movegridgoalresult],
+                    repetitions: 1
+                };
+                timeline.push(test_procedure_grid);
+            }
+        }
+        
+        var instr4_newroom = {
+            type: jsPsychHtmlButtonResponse,
+            stimulus: `<h2>Awesome!</h2>` + `<h3>Let's try out a random room.</h3>`,
+            choices: ['Continue']
+        };
+        timeline.push(instr4_newroom);
+
+        room_index = 2
+        var prac_index = [[1,2],[7,2],[5,1],[4,1],[0,3]]
+        for (i = 0; i < prac_index.length; i++) {
+            if (!GB){
+                var seegrid = make_seegridgoal_trial(room_index)
+                var movegridgoalresult = make_movegridgoalresult_trial(room_index)
+                var movegridgoal = make_movegridgoal_practice_trial(room_index,prac_index[i][0],prac_index[i][1])
+                var test_procedure_grid = {
+                    timeline: [fixation, seegrid, movegridgoal, movegridgoalresult],
+                    repetitions: 1
+                };
+                timeline.push(test_procedure_grid);
+            } else {
+                var seegrid = make_seegridgoalbomb_trial(room_index)
+                var movegridgoalresult = make_movegridgoalresultbomb_trial(room_index)
+                var movegridgoal = make_movegridgoalbomb_practice_trial(room_index,prac_index[i][0],prac_index[i][1])
+                var test_procedure_grid = {
+                    timeline: [fixation, seegrid, movegridgoal, movegridgoalresult],
+                    repetitions: 1
+                };
+                timeline.push(test_procedure_grid);
+            }
+        }
+        
+        var instr4_end = {
+            type: jsPsychHtmlButtonResponse,
+            stimulus: `<h2>Great!</h2>` +
+                    `<h4>That was a lot of practice for now.</h4>
+                     <h4>Let's move on.</h4>`,
+            choices: ['Continue']
+        };
+        timeline.push(instr4_end);
+
+        //------------------------------------//
+        // Instruction: Part 5
+        //------------------------------------//
+        var instr = {
+            type: jsPsychInstructions,
+            pages: function(){
+                var pages = []
+                for(i = (instr_ind_4end+1); i <= instr_ind_5end; i++){
+                    pages.push(
+                        "<img src='./" + inst_path +  "Slide" + i +
+                        ".png' style='max-width: 75%'></img>"
+                    )
+                }
+                return pages
+            },
+            show_clickable_nav: true,
+            button_label_previous: "Prev",
+            button_label_next: "Next",
+            data: {
+                task: 'instruction'
+            }
+        }
+        timeline.push(instr)
+
+        //------------------------------------//
+        // Room selecting practice
+        //------------------------------------//
+        var room_pair_index_practice = [[0,9], [3,10], [4,7]]
+        for (let i = 0; i < room_pair_index_practice.length; i++) { 
+            var room_index_1 = room_pair_index_practice[i][0];
+            var room_index_2 = room_pair_index_practice[i][1];
+            if (room_index_1 != room_index_2){
+                if(!GB){
+                    var roomsel = make_roomselection_trial(room_index_1, room_index_2, false);
+                    var roomselresult = make_showselectedroom_trial()
+                    var roomselpracfeedback = make_roomselpracfeedback_trial(room_index_1, room_index_2)
+                    var test_procedure_selection = {
+                        timeline: [fixation, roomsel, roomselresult, roomselpracfeedback]
+                    };
+                    timeline.push(test_procedure_selection);
+                } else {
+                    var roomsel = make_roomselectionbomb_trial(room_index_1, room_index_2, false);
+                    var roomselresult = make_showselectedroombomb_trial()
+                    var roomselpracfeedback = make_roomselpracfeedbackbomb_trial(room_index_1, room_index_2)
+                    var test_procedure_selection = {
+                        timeline: [fixation, roomsel, roomselresult, roomselpracfeedback]
+                    };
+                    timeline.push(test_procedure_selection);
+                }
+            }
+        }
+        var instr5_end = {
+            type: jsPsychHtmlButtonResponse,
+            stimulus: `<h2>You are all set!</h2>` +
+                    `<h4>But, before we start, let's check if everything is clear.</h4>`,
+            choices: ['Continue']
+        };
+        timeline.push(instr5_end);
+
+
+        //------------------------------------//
+        // Comprehension
+        //------------------------------------//
+        if(GB){
+            var comprehension3 = {
+                type: jsPsychGold1stepComprehension3,
+                data: {
+                    task: 'comprehension'
+                }
+            }
+        }else{
+            var comprehension3 = {
+                type: jsPsychGold1stepComprehension2,
+                data: {
+                    task: 'comprehension'
+                }
+            }
+        }
+        timeline.push(comprehension3)
+
+
+        //------------------------------------//
+        // The main experiment (block 2)
+        //------------------------------------//
+        for (let i = 0; i < n_limited_trials; i++) { 
+            var room_index_1 = room_pair_index[i][0];
+            var room_index_2 = room_pair_index[i][1];
+            if(!GB){
+                var roomsel = make_roomselection_trial(room_index_1, room_index_2);
+                var roomselresult = make_showselectedroom_trial()
+                var test_procedure_selection = {
+                    timeline: [fixation, roomsel, roomselresult]
+                };
+                timeline.push(test_procedure_selection);
+            }else{
+                var roomsel = make_roomselectionbomb_trial(room_index_1, room_index_2);
+                var roomselresult = make_showselectedroombomb_trial()
+                var test_procedure_selection = {
+                    timeline: [fixation, roomsel, roomselresult]
+                };
+                timeline.push(test_procedure_selection);
+            }
+        
+            if(((i+1) % feedback_period) == 0){
+                if(!GB){
+                    timeline.push(gold_feedback_trial);
+                }else{
+                    timeline.push(goldbomb_feedback_trial);
+                }
+            }
+        }
+
+        //------------------------------------//
+        // Quest
+        //------------------------------------//
+        var ToQuest = {
+            type: jsPsychHtmlButtonResponse,
+            stimulus: `<h2>You were GREAT!</h2>` + 
+                    `<h1> The last step is to answer some short questions.</h1>` +
+                    `<h2 style="color: red;">You can skip any question that you do not want to answer.</h2>`,
+            choices: ['Continue']
+        };
+        timeline.push(ToQuest);
+
+        // Define demographics form.
+        var demog = {
+            type: jsPsychSurveyDemo,
+            data: {
+                task: 'demog'
+            }
+        }
+        // Define feedback form.
+        var expfeedback = {
+            type: jsPsychSurveyFeedback,
+            frustration: false,
+            data: {
+                task: 'expfeedback'
+            }
+        }
+        timeline.push(loc74_1);
+        timeline.push(loc74_2);
+        timeline.push(ius12);
+        timeline.push(demog);
+        timeline.push(expfeedback);
+
+        //------------------------------------//
+        // ByeBye trial
+        //------------------------------------//
+        var byebye = {
+            type: jsPsychHtmlButtonResponse,
+            stimulus: `<h2>You were GREAT! </h2>` + 
+                    `<h1>Thank you for your participation!</h1>`,
+            choices: ['Bye bye!']
+        };
+        timeline.push(byebye);
+
+        // exit fullscreen mode
+        var fullscreen_off = {
+            type: jsPsychFullscreen,
+            fullscreen_mode: false
+        }
+        timeline.push(fullscreen_off);
+        
+        //------------------------------------//
+        // Run the experiment
+        //------------------------------------//
+        jsPsych.run(timeline);
+
+    </script>
+</html>
