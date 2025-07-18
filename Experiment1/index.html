@@ -118,26 +118,6 @@
         timeline.push(fullscreen);
         
         //------------------------------------//
-        // Consent
-        //------------------------------------//
-        var consent = {
-            type: jsPsychHtmlButtonResponse,
-            stimulus: `<div class="consent-container">` + create_consent_form(`25 to 35 minutes`, `3 £`, `3 £`) + `</div>`,
-            choices: ['I consent to participate in studies or experiments on cognitive control.'],
-            prompt: `<p><strong>If you do not want to consent to participate in this study, you cannot participate in the experiment and should close the window now.</p></strong>`
-        };
-        timeline.push(consent);
-
-
-        var dataconsent = {
-            type: jsPsychFullscreen,
-            fullscreen_mode: true,
-            message: `<div class="consent-container">` + create_data_consent_form() + `</div>`,
-            button_label: ['I consent to the use of my data described in the Data Protection Information Sheet and confirm having received a copy of the Data Protection Sheet.']
-        };
-        timeline.push(dataconsent);
-
-        //------------------------------------//
         // Instruction: Part 1
         //------------------------------------//
         var instr = {
