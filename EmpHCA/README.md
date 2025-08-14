@@ -10,7 +10,7 @@ To install the necessary Julia packages, follow these steps:
 2.	In the package management mode, type "activate .".
 3.	In the package management mode, type "instantiate".
 
-All Julia packages and dependencies will be installed automatically within this environment.
+All Julia packages and dependencies will be installed automatically within this environment. On a normal computer, this takes less than 10 minutes.
 
 # Data and source files
 
