@@ -76,12 +76,12 @@ function choice_consistency(Xinds1, as_inds1,
     # consistency
     consistency_indeces = zero(as_inds1) .* 1.0
     for t = eachindex(as_inds1)
-            x = Xinds1[t]
-            a1s = [as_inds1[t],
-                   as_inds1[[[x[2],x[1]] == x2 for x2 = Xinds1]][1]]
-            a2s = [as_inds2[[[x[1],x[2]] == x2 for x2 = Xinds2]][1],
-                   as_inds2[[[x[2],x[1]] == x2 for x2 = Xinds2]][1]]
-            consistency_indeces[t] = mean([mean(a1s .== a) for a = a2s])
+        x = Xinds1[t]
+        a1s = [as_inds1[t],
+                as_inds1[[[x[2],x[1]] == x2 for x2 = Xinds1]][1]]
+        a2s = [as_inds2[[[x[1],x[2]] == x2 for x2 = Xinds2]][1],
+                as_inds2[[[x[2],x[1]] == x2 for x2 = Xinds2]][1]]
+        consistency_indeces[t] = mean([mean(a1s .== a) for a = a2s])
     end
     consistency_index = mean(consistency_indeces)
     if ifpassinds
@@ -91,7 +91,28 @@ function choice_consistency(Xinds1, as_inds1,
     end
 end
 export choice_consistency
-
+function subchoice_consistency(Xinds1, as_inds1, 
+                               Xinds2, as_inds2; ifpassinds = false)
+    # choosing pairs of X1 whose inverse are in X2
+    inds1 = [[x[2],x[1]] ∈ Xinds2 for x = Xinds1]
+    as_inds1 = as_inds1[inds1]; Xinds1 = Xinds1[inds1]; 
+    
+    # consistency
+    consistency_indeces = zero(as_inds1) .* 1.0
+    for t = eachindex(as_inds1)
+        x = Xinds1[t]
+        a1 = as_inds1[t]
+        a2 = as_inds2[[[x[2],x[1]] == x2 for x2 = Xinds2]][1]
+        consistency_indeces[t] = a1 == a2
+    end
+    consistency_index = mean(consistency_indeces)
+    if ifpassinds
+        return consistency_index, inds1
+    else
+        return consistency_index
+    end
+end
+export subchoice_consistency
 
 # ------------------------------------------------------------------------------
 # ------------------------------------------------------------------------------

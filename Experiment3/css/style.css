@@ -1,0 +1,130 @@
+/* ------------------------------------ */
+/*  to show the base, agent, and goal   */
+/* ------------------------------------ */
+.container {
+    position: relative;
+    width: 250px;
+    height: 250px;
+    margin-bottom: 30px;
+    justify-content: center;
+    align-items: center;
+}
+.base-image {
+    width: 100%;
+    height: 100%; /* Adjust height to fill the container */
+    object-fit: cover; /* Ensure the image fits well within the container */
+    display: block;
+    z-index: 1;
+}
+.agent-image {
+    position: absolute;
+    width: 27%; /* Keep a consistent size relative to the container */
+    height: auto;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 3;
+}
+.goal-image {
+    position: absolute;
+    width: 30%; /* Keep a consistent size relative to the container */
+    height: auto;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 2;
+}
+.target-image {
+    position: absolute;
+    object-fit: contain; /* Ensure the image scales properly */
+    z-index: 2;
+}
+
+/* ------------------------------------ */
+/* to make a row of actions */
+/* ------------------------------------ */
+.row {
+    display: flex;
+    justify-content: space-between; /* Adds space between the containers */
+    flex-wrap: nowrap; /* Ensures all containers stay in a single row */
+    gap: 10px; /* Adds consistent spacing between items */
+    /* width: 100%; Row takes the full width of the parent container */
+    margin-bottom: 30px;
+}
+.container-row {
+    position: relative;
+}
+
+/* ------------------------------------ */
+/* for selection trials
+/* ------------------------------------ */
+/* Wrapper for the two divs */
+.selection-container {
+    display: flex; /* Enable flexbox for horizontal alignment */
+    justify-content: space-between; /* Add space between the divs */
+    align-items: stretch; /* Ensures both divs have the same height */
+    gap: 50px; /* Space between the divs */
+    margin: 0px 0; /* Add spacing above and below the container */
+    padding: 0px; /* Optional padding around the container */
+}
+
+/* Individual div styling */
+.selection-box {
+    flex: 1; /* Ensures equal width for both divs */
+    border: 3px solid black; /* Make the borders visible */
+    padding: 0px 10px;
+}
+.selection-box p {
+    margin: 5px 0; /* Reduce vertical spacing between paragraphs */
+}
+
+/* Separating elements above and below */
+.selection-spacer {
+    margin: 00px 0;
+    text-align: center;
+    font-size: 18px;
+}
+
+.selection-container-small {
+    position: relative;
+    width: 120px;
+    height: 120px;
+    margin-bottom: 10px;
+    justify-content: center;
+    align-items: center;
+}
+
+
+
+/* ------------------------------------ */
+/* for feedback trial
+/* ------------------------------------ */
+.gold-coins-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 20px; /* Adjust spacing between elements */
+    margin-bottom: 40px; /* Add margin below the container */
+}
+.gold-coins-text {
+    text-align: center;
+    font-family: Arial, sans-serif; /* Ensure consistent text styling */
+}
+.gold-coins-image {
+    width: 100px; /* Adjust image size as needed */
+    height: auto;
+}
+.gold-coins-text h1, 
+.gold-coins-text h2 {
+    margin: 20px 0; /* Prevent default large margins */
+    padding: 0;
+}
+
+/* ------------------------------------ */
+/* for feedback trial
+/* ------------------------------------ */
+.consent-container {
+    text-align: left;
+    margin-left: 50px;
+    margin-right: 50px;
+}

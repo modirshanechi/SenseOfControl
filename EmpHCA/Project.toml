@@ -1,7 +1,7 @@
 name = "EmpHCA"
 uuid = "5c2dc108-4a28-4fe7-be2b-298d1228219c"
-authors = ["modirsha <alireza.modirshanechi@epfl.ch>"]
 version = "0.1.0"
+authors = ["modirsha <alireza.modirshanechi@epfl.ch>"]
 
 [deps]
 AdvancedMH = "5b7e9947-ddc0-4b3f-9b55-0d8042f74170"
@@ -20,6 +20,7 @@ MLJ = "add582a8-e3ab-11e8-2d5e-e98b27df1bc7"
 MLJLinearModels = "6ee0df7b-362f-4a72-a706-9e79364fb692"
 MultivariateStats = "6f286f6a-111f-5878-ab1e-185364afe411"
 NNlib = "872c559c-99b0-510c-b3b7-b6c96a88d5cd"
+PyCall = "438e738f-606a-5dbb-bf0a-cddfbfd45ab0"
 PyPlot = "d330b81b-6aea-500a-939a-2ce795aea3ee"
 Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 ReverseDiff = "37e2e3b7-166d-5795-8a7a-e32c996b4267"
@@ -43,6 +44,7 @@ MLJ = "0.20.7"
 MLJLinearModels = "0.10.0"
 MultivariateStats = "0.10.3"
 NNlib = "0.9.24"
+PyCall = "1.96.4"
 ReverseDiff = "1.15.3"
 Revise = "3.6.2"
 StatsBase = "0.34.4"
