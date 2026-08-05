@@ -23,6 +23,28 @@ export Func_logBF_string
 
 # ------------------------------------------------------------------------------
 # ------------------------------------------------------------------------------
+# Logging a statistical test (explanation + result) to stdout and a log buffer
+# ------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
+function log_test(io_log::IO, label::AbstractString, Test_result; pval = nothing, logBF = nothing)
+    for io = (stdout, io_log)
+        println(io, label)
+        show(io, MIME("text/plain"), Test_result)
+        println(io)
+        if pval !== nothing
+            println(io, "pval = ", pval)
+        end
+        if logBF !== nothing
+            println(io, "logBF = ", logBF)
+        end
+        println(io, "-"^60)
+    end
+end
+export log_test
+
+
+# ------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 # Converting numbers to 2-digit strings (e.g., 1 -> "01" and 21 -> "21")
 # ------------------------------------------------------------------------------
 # ------------------------------------------------------------------------------
@@ -162,8 +184,9 @@ function BIC_EqualVarianceTTest(X::Array{Float64,1},Y::Array{Float64,1})
     logBF = log_p1 - log_p0
 end
 export BIC_EqualVarianceTTest
-BIC_UnequalVarianceTTest(X::Array{Float64,1},Y::Array{Float64,1}) = 
-    BIC_EqualVarianceTTest(X::Array{Float64,1},Y::Array{Float64,1})
+function BIC_UnequalVarianceTTest(X::Array{Float64,1}, Y::Array{Float64,1})
+    error("BIC_UnequalVarianceTTest is not implemented")
+end
 export BIC_UnequalVarianceTTest
 # ------------------------------------------------------------------------------
 # ------------------------------------------------------------------------------
@@ -200,7 +223,7 @@ function Func_Cohen_d(X1,X2)
     μ1 = mean(X1);   μ2 = mean(X2)
     Δμ = μ1 - μ2
     
-    n1 = length(X1); n2 = mean(X2)
+    n1 = length(X1); n2 = length(X2)
     σ1 = std(X1);    σ2 = std(X2)
     σ = sqrt( ( (n1 - 1) * σ1^2 + (n2 - 1) * σ2^2 ) / (n1 + n2 - 2)  )
 

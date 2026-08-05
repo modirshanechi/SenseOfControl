@@ -1,31 +1,48 @@
 module EmpHCA
 
 using ConcreteStructs
-using PyPlot; import StatsPlots
+
+using PyPlot; 
+import StatsPlots
+import StatsBase: countmap, summarystats
+
 using DataFrames
-using Random, Statistics, Turing, MCMCChains, Distributions
-using Zygote
-using LinearAlgebra
+using CSV, JLD2, JSON3
+
+using Random, Statistics, Distributions
+using Turing, MCMCChains
+using MCMCDiagnosticTools: mcse
+
+using LinearAlgebra, Zygote
 using NNlib: softmax
+
+using JuMP
+import Clarabel
+import MathOptInterface as MOI
+
 
 const MainColors = (; data = "#415a77", 
                     lcol = ["#E33128","k","#3788C1"],
                     GB = ["#FFD983","#DE3045","#e09f3e"])
 export MainColors
-const ModelNames = (;   MEmp = ["L < 1","L = 1","L > 1"], 
-        MAllE1 = ["Random","N-Act","Emp-l","General"], 
-        MAllE2 = ["Rand","Na","Na(G)-Emp(B)","Emp(G)-Na(B)","E-E","General"])
+const ModelNames = (; MEmp = ["L < 1","L = 1","L > 1"], 
+                MAll = ["Random","N-Act","Emp-l","General"])
 export ModelNames
 
-include("Functions_for_emp.jl")
-include("Functions_for_emp_K.jl")
-include("Functions_for_gold.jl")
-include("Functions_for_goldDataE1.jl")
-include("Functions_for_goldDataE2.jl")
-include("Functions_for_goldDataE3.jl")
-include("Functions_general.jl")
-include("Functions_for_plotting.jl")
+include("Functions_empell.jl")
+include("Functions_Klyemp.jl")
+
+include("Functions_experiments.jl")
+include("Functions_goldagent.jl")
+
+include("Functions_TuringModels.jl")
+include("Functions_bridgesampling.jl")
+include("Functions_BIC.jl")
 include("Functions_MCMC_RandEffects.jl")
+
+include("Functions_general.jl")
+include("Functions_plotting.jl")
+
 
 end # module EmpHCA
 
